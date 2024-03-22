@@ -28,13 +28,9 @@ while True:
     if hands:
         hand = hands[0]
         x, y, w, h = hand['bbox']
-
         imgWhite = np.ones((imgSize, imgSize, 3), np.uint8)*255
-
         imgCrop = img[y - offset:y + h + offset, x - offset:x + w + offset]
-
         imgCropShape = imgCrop.shape
-
         aspectRatio = h/w
 
         if aspectRatio > 1:
@@ -87,6 +83,7 @@ while True:
             text_size = cv2.getTextSize(f"{pred}", cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)[0]
             text_x += text_size[0] + 10  # Increment x-coordinate for next prediction
         cv2.imshow("Predictions", pred_img)
+        print(pred_img)  # Print the predictions to console
         cv2.waitKey(1)
 
     if key == ord("s"):
