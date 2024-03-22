@@ -3,6 +3,7 @@ from cvzone.HandTrackingModule import HandDetector
 from cvzone.ClassificationModule import Classifier
 import numpy as np
 import math
+from autocorrect import Speller
 
 # videocapture variables
 cap = cv2.VideoCapture(0)
@@ -21,6 +22,9 @@ labels = ["A", "B", "C"]
 # data prediction variables
 predictions = []
 
+# spell checker (not yet implemented)
+spell = Speller()
+
 while True:
     success, img = cap.read()
     imgOutput = img.copy()
@@ -34,7 +38,7 @@ while True:
         aspectRatio = h/w
 
         if aspectRatio > 1:
-            k = imgSize/h
+            k = imgSize / h
             wCal = math.ceil(k*w)
             imgResize = cv2.resize(imgCrop, (wCal, imgSize))
             imgResizeShape = imgResize.shape
