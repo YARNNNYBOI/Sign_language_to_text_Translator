@@ -86,8 +86,8 @@ while True:
             cv2.putText(pred_img, f"{pred}", (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
             text_size = cv2.getTextSize(f"{pred}", cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)[0]
             text_x += text_size[0] + 10  # Increment x-coordinate for next prediction
+            print(pred_img)  # print on console
         cv2.imshow("Predictions", pred_img)
-        print(pred_img)  # Print the predictions to console
         cv2.waitKey(1)
 
     if key == ord("s"):
