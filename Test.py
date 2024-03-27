@@ -17,7 +17,7 @@ imgSize = 300
 # data collection variables
 folder = "Data/C"
 counter = 0
-labels = ["A", "B", "C"]
+labels = ["A", "B", "C", "D", "E", "F", "G", "H", "I"]
 
 # data prediction variables
 predictions = []
@@ -28,22 +28,22 @@ spell = Speller()
 while True:
     success, img = cap.read()
     imgOutput = img.copy()
-    hands, img = detector.findHands(img,)
+    hands, img = detector.findHands(img, )
     if hands:
         hand = hands[0]
         x, y, w, h = hand['bbox']
-        imgWhite = np.ones((imgSize, imgSize, 3), np.uint8)*255
+        imgWhite = np.ones((imgSize, imgSize, 3), np.uint8) * 255
         imgCrop = img[y - offset:y + h + offset, x - offset:x + w + offset]
         imgCropShape = imgCrop.shape
-        aspectRatio = h/w
+        aspectRatio = h / w
 
         if aspectRatio > 1:
             k = imgSize / h
-            wCal = math.ceil(k*w)
+            wCal = math.ceil(k * w)
             imgResize = cv2.resize(imgCrop, (wCal, imgSize))
             imgResizeShape = imgResize.shape
-            wGap = math.ceil((imgSize - wCal)/2)
-            imgWhite[:, wGap:wCal+wGap] = imgResize
+            wGap = math.ceil((imgSize - wCal) / 2)
+            imgWhite[:, wGap:wCal + wGap] = imgResize
             prediction, index = classifier.getPrediction(imgWhite, draw=False)
             predictions.append(labels[index])  # Append prediction to list
             print(prediction, index)
@@ -58,9 +58,10 @@ while True:
             prediction, index = classifier.getPrediction(imgWhite, draw=False)
             predictions.append(labels[index])  # Append prediction to list
 
-        cv2.rectangle(imgOutput, (x-offset, y-offset-50), (x-offset+90, y-offset-50+50), (255, 0, 255), cv2.FILLED)
+        cv2.rectangle(imgOutput, (x - offset, y - offset - 50), (x - offset + 90, y - offset - 50 + 50), (255, 0, 255),
+                      cv2.FILLED)
         cv2.putText(imgOutput, labels[index], (x, y - 20), cv2.FONT_HERSHEY_SIMPLEX, 1.7, (255, 255, 255), 2)
-        cv2.rectangle(imgOutput, (x-offset, y-offset), (x+w + offset, y+h + offset), (255, 0, 255), 4)
+        cv2.rectangle(imgOutput, (x - offset, y - offset), (x + w + offset, y + h + offset), (255, 0, 255), 4)
 
         cv2.imshow("imageCrop", imgCrop)
         cv2.imshow("imageWhite", imgWhite)
@@ -69,6 +70,12 @@ while True:
 
     key = cv2.waitKey(1)
     if key == ord('q'):
+        cv2.destroyWindow("image")
+        cv2.destroyWindow("imageCrop")
+        cv2.destroyWindow("imageWhite")
+        # Convert predictions list to a single word
+        word = ''.join(predictions)
+
         pred_img = np.ones((200, 400, 3), np.uint8) * 255  # Create a blank image
         text_x = 30  # Initial x-coordinate for text
         text_y = 100  # y-coordinate for text
@@ -83,12 +90,12 @@ while True:
                 count = 0  # Reset the counter if prediction changes
                 prev_pred = pred  # Update previous prediction
 
-            cv2.putText(pred_img, f"{pred}", (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
-            text_size = cv2.getTextSize(f"{pred}", cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2)[0]
-            text_x += text_size[0] + 10  # Increment x-coordinate for next prediction
-            print(pred_img)  # print on console
+        # Draw the word on pred_img
+        cv2.putText(pred_img, word, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
         cv2.imshow("Predictions", pred_img)
-        cv2.waitKey(1)
+        print("Predicted word:", predictions)
+        print("Predicted word:", word)
+        cv2.waitKey(0)
 
     if key == ord("s"):
         break
