@@ -3,6 +3,7 @@ from cvzone.HandTrackingModule import HandDetector
 from cvzone.ClassificationModule import Classifier
 import numpy as np
 import math
+import time
 from autocorrect import Speller
 
 # videocapture variables
@@ -21,9 +22,14 @@ labels = ["A", "B", "C", "D", "E", "F", "G", "H", "I"]
 
 # data prediction variables
 predictions = []
+predictions_array = []
 
 # spell checker (not yet implemented)
 spell = Speller()
+
+# timer
+start_time = time.time()
+last_save_time = start_time  # Initialize last save time
 
 while True:
     success, img = cap.read()
@@ -36,6 +42,7 @@ while True:
         imgCrop = img[y - offset:y + h + offset, x - offset:x + w + offset]
         imgCropShape = imgCrop.shape
         aspectRatio = h / w
+        current_time = time.time()  # Get the current time
 
         if aspectRatio > 1:
             k = imgSize / h
@@ -58,6 +65,11 @@ while True:
             prediction, index = classifier.getPrediction(imgWhite, draw=False)
             predictions.append(labels[index])  # Append prediction to list
 
+        if current_time - last_save_time >= 5:  # Check if 5 seconds have passed since the last save
+            last_save_time = current_time  # Update the last save time
+            predictions_array.append(predictions[-1])  # Save the latest prediction
+            print("Saved prediction to predictions_array")
+
         cv2.rectangle(imgOutput, (x - offset, y - offset - 50), (x - offset + 90, y - offset - 50 + 50), (255, 0, 255),
                       cv2.FILLED)
         cv2.putText(imgOutput, labels[index], (x, y - 20), cv2.FONT_HERSHEY_SIMPLEX, 1.7, (255, 255, 255), 2)
@@ -74,7 +86,7 @@ while True:
         cv2.destroyWindow("imageCrop")
         cv2.destroyWindow("imageWhite")
         # Convert predictions list to a single word
-        word = ''.join(predictions)
+        word = ''.join(predictions_array)
 
         pred_img = np.ones((200, 400, 3), np.uint8) * 255  # Create a blank image
         text_x = 30  # Initial x-coordinate for text
@@ -94,7 +106,9 @@ while True:
         cv2.putText(pred_img, word, (text_x, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
         cv2.imshow("Predictions", pred_img)
         print("Predicted word:", predictions)
-        print("Predicted word:", word)
+        print("Predictions for this batch:", predictions_array)
+        print("Corrected predicted word:", word)
+
         cv2.waitKey(0)
 
     if key == ord("s"):
