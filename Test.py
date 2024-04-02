@@ -107,7 +107,7 @@ while True:
         cv2.imshow("Predictions", pred_img)
         print("Predicted word:", predictions)
         print("Predictions for this batch:", predictions_array)
-        print("Corrected predicted word:", word)
+        print("Corrected predicted word:", spell(word))
 
         cv2.waitKey(0)
 
