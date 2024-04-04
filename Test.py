@@ -46,15 +46,22 @@ while True:
     if hands:
         hand = hands[0]
         x, y, w, h = hand['bbox']
+
+        # Adjust bounding box to stay within window boundaries
+        x = max(0, x - offset)
+        y = max(0, y - offset)
+        x_end = min(img.shape[1], x + w + offset)
+        y_end = min(img.shape[0], y + h + offset)
+
         imgWhite = np.ones((imgSize, imgSize, 3), np.uint8) * 255
-        imgCrop = img[y - offset:y + h + offset, x - offset:x + w + offset]
+        imgCrop = img[y:y_end, x:x_end]
         imgCropShape = imgCrop.shape
-        aspectRatio = h / w
+        aspectRatio = imgCropShape[0] / imgCropShape[1]
         current_time = time.time()  # Get the current time
 
         if aspectRatio > 1:
-            k = imgSize / h
-            wCal = math.ceil(k * w)
+            k = imgSize / imgCropShape[0]
+            wCal = math.ceil(k * imgCropShape[1])
             imgResize = cv2.resize(imgCrop, (wCal, imgSize))
             imgResizeShape = imgResize.shape
             wGap = math.ceil((imgSize - wCal) / 2)
@@ -67,8 +74,8 @@ while True:
                         print(prediction, index)
 
         else:
-            k = imgSize / w
-            hCal = math.ceil(k * h)
+            k = imgSize / imgCropShape[1]
+            hCal = math.ceil(k * imgCropShape[0])
             imgResize = cv2.resize(imgCrop, (imgSize, hCal))
             imgResizeShape = imgResize.shape
             hGap = math.ceil((imgSize - hCal) / 2)
@@ -80,7 +87,7 @@ while True:
                         predictions.append(labels[index])  # Append prediction to list
                         print(prediction, index)
 
-        if current_time - last_save_time >= 3:  # Check if 3 seconds have passed since the last save
+        if current_time - last_save_time >= 3:  # Check if 5 seconds have passed since the last save
             last_save_time = current_time  # Update the last save time
             if not stop_spelling:  # Check if spelling is not stopped
                 if not stop_time:  # Check if time counting is not stopped
@@ -88,19 +95,20 @@ while True:
                     print("Saved prediction to predictions_array")
                     next_letter_time = current_time + letter_appearance_time  # Update next letter appearance time
 
-        cv2.rectangle(imgOutput, (x - offset, y - offset - 50), (x - offset + 90, y - offset - 50 + 50), (255, 0, 255),
-                      cv2.FILLED)
+        cv2.rectangle(imgOutput, (x, y - 50), (x + 90, y), (255, 0, 255), cv2.FILLED)
         if 0 <= index < len(labels):  # Check if the index is within the valid range
             cv2.putText(imgOutput, labels[index], (x, y - 20), cv2.FONT_HERSHEY_SIMPLEX, 1.7, (255, 255, 255), 2)
-        cv2.rectangle(imgOutput, (x - offset, y - offset), (x + w + offset, y + h + offset), (255, 0, 255), 4)
+        cv2.rectangle(imgOutput, (x, y), (x_end, y_end), (255, 0, 255), 4)
 
         # Display spelled letters at the top of the window
         word = ''.join(predictions_array)
         spelled_size = cv2.getTextSize(word, cv2.FONT_HERSHEY_SIMPLEX, 1, 2)[0]
         spelled_x = (img.shape[1] - spelled_size[0]) // 2
         spelled_y = 50
-        cv2.rectangle(imgOutput, (spelled_x - 10, spelled_y - 10), (spelled_x + spelled_size[0] + 10, spelled_y + spelled_size[1] + 10), spell_box_color, -1)
-        cv2.putText(imgOutput, word, (spelled_x, spelled_y + spelled_size[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        cv2.rectangle(imgOutput, (spelled_x - 10, spelled_y - 10),
+                      (spelled_x + spelled_size[0] + 10, spelled_y + spelled_size[1] + 10), spell_box_color, -1)
+        cv2.putText(imgOutput, word, (spelled_x, spelled_y + spelled_size[1]), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                    (255, 255, 255), 2)
 
         # Display timer for next letter appearance
         remaining_time = int(next_letter_time - current_time) if not stop_spelling else letter_appearance_time
@@ -109,8 +117,10 @@ while True:
         timer_x = 20  # Position time indicator to the left side
         timer_y = 100
         time_box_color = (0, 0, 255) if stop_spelling else (0, 255, 0)  # Change box color based on spelling state
-        cv2.rectangle(imgOutput, (timer_x - 10, timer_y - 10), (timer_x + timer_size[0] + 10, timer_y + timer_size[1] + 10), time_box_color, -1)
-        cv2.putText(imgOutput, timer_text, (timer_x, timer_y + timer_size[1]), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        cv2.rectangle(imgOutput, (timer_x - 10, timer_y - 10),
+                      (timer_x + timer_size[0] + 10, timer_y + timer_size[1] + 10), time_box_color, -1)
+        cv2.putText(imgOutput, timer_text, (timer_x, timer_y + timer_size[1]), cv2.FONT_HERSHEY_SIMPLEX, 1,
+                    (255, 255, 255), 2)
 
         cv2.imshow("image", imgOutput)
 
